@@ -39,4 +39,4 @@ jobs:
        
     - name: Check formatting with pylint
       run: |
-        pylint inflammation/models.py --fail-under 5
+        pylint inflammation/models.py --fail-under 11
