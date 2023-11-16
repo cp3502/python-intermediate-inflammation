@@ -39,4 +39,4 @@ jobs:
        
     - name: Check formatting with pylint
       run: |
-      	pylint tests/test_models.py
+        pylint tests/test_models.py
