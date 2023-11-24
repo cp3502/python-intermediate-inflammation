@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Software for managing and analysing patients' inflammation data in our imaginary hospital."""
+"""Software for managing and analyzing patients' inflammation data in our imaginary hospital."""
 
 import argparse
 import os
 
 from inflammation import models, views
-from inflammation.compute_data import analyse_data
+from inflammation.compute_data import analyse_data, CSVDataSource, JSONDataSource
 
 
 def main(args):
@@ -15,22 +15,37 @@ def main(args):
     - selecting the necessary models and views for the current task
     - passing data between models and views
     """
-    InFiles = args.infiles
-    if not isinstance(InFiles, list):
-        InFiles = [args.infiles]
+    in_files = args.infiles
+    if not isinstance(in_files, list):
+        in_files = [args.infiles]
 
 
     if args.full_data_analysis:
-        analyse_data(os.path.dirname(InFiles[0]))
+        _, extension = os.path.splitext(in_files[0])
+        if extension == '.json':
+            data_source = JSONDataSource(os.path.dirname(in_files[0]))
+        elif extension == '.csv':
+            data_source = CSVDataSource(os.path.dirname(in_files[0]))
+        else:
+            raise ValueError(f'Unsupported file format: {extension}')
+        data_result = analyse_data(data_source)
+        graph_data = {
+            'standard deviation by day': data_result,
+        }
+        views.visualize(graph_data)
         return
 
-    for filename in InFiles:
+    for filename in in_files:
         inflammation_data = models.load_csv(filename)
 
-        view_data = {'average': models.daily_mean(inflammation_data), 'max': models.daily_max(inflammation_data), 'min': models.daily_min(inflammation_data), **(models.s_dev(inflammation_data))}
-
+        view_data = {'average': models.daily_mean(inflammation_data), 
+                     'max': models.daily_max(inflammation_data), 
+                     'min': models.daily_min(inflammation_data), 
+                     **(models.s_dev(inflammation_data))
+                    }
 
         views.visualize(view_data)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
